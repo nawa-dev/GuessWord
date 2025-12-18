@@ -1,59 +1,185 @@
-# GuessWord
+# 📘 Vocabulary Flashcard App (Angular + Google Sheets)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.10.
+โปรเจคนี้คือ **เว็บแอป Flashcard สำหรับฝึกคำศัพท์ภาษาอังกฤษ–ไทย** พัฒนาโดยใช้ **Angular (Standalone Component)** และใช้ **Google Sheets เป็นคลังคำศัพท์** ผ่าน **Google Apps Script (Web API)** พร้อมระบบเสียงอ่าน (Speech Synthesis)
 
-## Development server
+---
 
-To start a local development server, run:
+## ✨ Features
+
+- 📇 แสดงคำศัพท์แบบ **Flashcard (Flip Card)**
+- 🔊 อ่านเสียงคำศัพท์ภาษาอังกฤษด้วย **Web Speech API**
+- ⏳ ปรับความเร็วเสียงอ่านได้
+- 🔀 สุ่มลำดับคำศัพท์ (Shuffle)
+- ⬅️➡️ ปุ่ม Previous / Next พร้อม animation
+- ☁️ ดึงข้อมูลคำศัพท์จาก **Google Sheets** แบบ real-time
+- 🧩 ใช้ **Angular Standalone Component** (ไม่ใช้ NgModule)
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Angular (Standalone, Angular 15+)
+- **Backend / API**: Google Apps Script (Web App)
+- **Database**: Google Sheets
+- **Speech**: Web Speech API (SpeechSynthesis)
+
+---
+
+## 📂 โครงสร้าง Google Sheets
+
+สร้าง Google Sheet ที่มีอย่างน้อย **2 คอลัมน์**:
+
+| Column A (Word) | Column B (Translation) |
+| --------------- | ---------------------- |
+| Hello           | สวัสดี                 |
+| Government      | รัฐบาล                 |
+| Equality        | ความเท่าเทียม          |
+
+> แถวแรกสามารถเป็น header ได้ (ระบบจะข้ามให้)
+
+---
+
+## 🌐 Google Apps Script (API)
+
+### ตัวอย่างโค้ด `doGet()`
+
+```javascript
+function doGet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+
+  const data = sheet.getDataRange().getValues();
+  data.shift(); // remove header
+
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(
+    ContentService.MimeType.JSON
+  );
+}
+```
+
+### ขั้นตอน Deploy
+
+1. Extensions → Apps Script
+2. Deploy → New deployment
+3. Type: **Web app**
+4. Execute as: **Me**
+5. Who has access: **Anyone**
+6. Copy URL ไปใช้ใน Angular
+
+---
+
+## ⚙️ Angular Setup
+
+### 1️⃣ เปิดใช้งาน HttpClient (`app.config.ts`)
+
+```ts
+import { provideHttpClient } from '@angular/common/http';
+
+export const appConfig = {
+  providers: [provideHttpClient()],
+};
+```
+
+---
+
+### 2️⃣ Standalone Component
+
+```ts
+@Component({
+  selector: 'app-word-card-page',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './word-card-page.html',
+  styleUrl: './word-card-page.css'
+})
+```
+
+---
+
+### 3️⃣ โหลดคำศัพท์จาก Google Sheets
+
+```ts
+ngOnInit() {
+  this.http.get<[string, string][]>(API_URL)
+    .subscribe(data => {
+      this.word = this.shuffle([...data]);
+      this.wordIndex = 0;
+    });
+}
+```
+
+---
+
+## 🔊 Speech Synthesis (เสียงอ่าน)
+
+```ts
+opensound() {
+  const utterance = new SpeechSynthesisUtterance(
+    this.word[this.wordIndex][0]
+  );
+
+  utterance.lang = 'en-US';
+  utterance.rate = 0.6;   // ความเร็วเสียง
+  utterance.pitch = 1;
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance);
+}
+```
+
+---
+
+## 🧠 UX Logic (Flip ก่อนเปลี่ยนคำ)
+
+- การ์ดจะ **พลิกกลับด้านหน้า** ก่อน
+- รอ animation (0.8s)
+- จากนั้นจึงเปลี่ยนคำศัพท์
+
+```ts
+if (this.isFlipped) {
+  this.isFlipped = false;
+  setTimeout(() => this.moveNext(), 800);
+}
+```
+
+---
+
+## 🚀 Run Project
 
 ```bash
+npm install
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+เปิดเบราว์เซอร์ที่:
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```
+http://localhost:4200
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
-```
+## 🧩 Possible Improvements
 
-## Building
+- 🎚️ Slider ปรับความเร็วเสียง
+- 📱 Responsive สำหรับมือถือ
+- 🧠 Spaced Repetition (แบบ Anki)
+- 💾 Offline Cache (LocalStorage)
+- 🗂️ แยกคำศัพท์ตามหมวด / Sheet
 
-To build the project run:
+---
 
-```bash
-ng build
-```
+## 📜 License
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+MIT License
 
-## Running unit tests
+---
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## 🙌 Acknowledgements
 
-```bash
-ng test
-```
+- Angular Team
+- Google Apps Script
+- Web Speech API
 
-## Running end-to-end tests
+---
 
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+> 📌 โปรเจคนี้เหมาะสำหรับผู้ที่ต้องการฝึกภาษา หรือเป็นตัวอย่างการเชื่อม **Angular + Google Sheets** แบบง่ายและใช้งานจริง
