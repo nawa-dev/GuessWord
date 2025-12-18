@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-//test
+
 @Component({
   selector: 'app-word-card-page',
   imports: [CommonModule],
