@@ -50,6 +50,14 @@ export class WordCardPage {
     utterance.rate = 0.8;
     speechSynthesis.speak(utterance);
   }
+  opensound2() {
+    console.log(this.isFlipped);
+    this.isFlipped = false;
+    const utterance = new SpeechSynthesisUtterance(this.word[this.wordIndex][0]);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.8;
+    speechSynthesis.speak(utterance);
+  }
   next() {
     if (this.isFlipped) {
       // 1. พลิกกลับก่อน
